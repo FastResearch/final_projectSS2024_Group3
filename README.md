@@ -1,2 +1,2 @@
-# Datenanalyse-2024-Einf-hrung-Python
+# Abschlussprojekt SoSe 2024
 Datenanalyse von Kunden zum Autokauf
