@@ -1,0 +1,970 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 222,
+   "id": "e40c9cd3-8190-4f9c-9ae2-763f46acce8d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 223,
+   "id": "8bee1b76-6d53-4ea4-9b38-ad7f3a6b1518",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "      Alter  Einkommen      Preis  Geschlecht  Zeit KundeNr\n",
+      "0        64    66894.0   88160.31         1.0  43.0   K0310\n",
+      "1        54    77644.0  103145.70         1.0  40.0   K1042\n",
+      "2        55    44341.0   80565.16         0.0  37.0   K0382\n",
+      "3        49    67271.0   83949.89         0.0  42.0   K0498\n",
+      "4        46    49832.0   93781.58         0.0  41.0   K0552\n",
+      "...     ...        ...        ...         ...   ...     ...\n",
+      "1099     70    69581.0  103751.58         1.0  51.0   K0467\n",
+      "1100     38    48301.0   64230.98         1.0  33.0   K0122\n",
+      "1101     67    63547.0  103123.57         1.0  41.0   K1045\n",
+      "1102     37    32686.0   49215.87         1.0  36.0   K1096\n",
+      "1103     55    71240.0  106132.59         1.0  49.0   K0861\n",
+      "\n",
+      "[1104 rows x 6 columns]\n",
+      "     Alter     Einkommen  Geschlecht  Zeit KundeNr\n",
+      "0       30  39919.095335           0  29.0   K1814\n",
+      "1       41  53430.673086           0  27.0   K1544\n",
+      "2       64  73163.216927           0  32.0   K1945\n",
+      "3       41  36761.482581           0  44.0   K1825\n",
+      "4       35  42684.331632           1  33.0   K1144\n",
+      "..     ...           ...         ...   ...     ...\n",
+      "886     32  34391.824965           1  48.0   K1211\n",
+      "887     41  68516.495439           0  34.0   K1375\n",
+      "888     65  89685.333441           0  23.0   K1965\n",
+      "889     68  95714.305268           0  32.0   K1540\n",
+      "890     49  73319.187085           0  27.0   K1207\n",
+      "\n",
+      "[891 rows x 5 columns]\n",
+      "     KundeNr          Niederlassung\n",
+      "0      K0001                Sachsen\n",
+      "1      K0002                    NRW\n",
+      "2      K0003                 Hessen\n",
+      "3      K0004                 Bayern\n",
+      "4      K0005                 Bayern\n",
+      "...      ...                    ...\n",
+      "1990   K1991                 Hessen\n",
+      "1991   K1992      Baden-Württemberg\n",
+      "1992   K1993    Nordrhein-Westfalen\n",
+      "1993   K1994                 Berlin\n",
+      "1994   K1995  Berlin-Charlottenburg\n",
+      "\n",
+      "[1995 rows x 2 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "customer = pd.read_csv('kunden.csv', delimiter= ';')\n",
+    "table_customer = pd.DataFrame(customer)\n",
+    "\n",
+    "visitor = pd.read_csv('besucher.csv', delimiter= ';', decimal= ',')\n",
+    "table_visitor = pd.DataFrame(visitor)\n",
+    "\n",
+    "geodata = pd.read_csv('geo.txt', delimiter= '\\t')\n",
+    "table_geo = pd.DataFrame(geodata)\n",
+    "\n",
+    "print(table_customer)\n",
+    "print(table_visitor)\n",
+    "print(table_geo)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 224,
+   "id": "ffba5f79-655f-4f95-932d-f6a8850cffb7",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    " ## überschneiden sich die KundeNr"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 225,
+   "id": "bd1f9362-f131-4ab2-900f-d9a723127fb5",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1995\n"
+     ]
+    }
+   ],
+   "source": [
+    "sum_rows = (1104+891)\n",
+    "\n",
+    "print(sum_rows)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 226,
+   "id": "00e7fdfa-4949-47f4-a5d4-ef3c1e4f1f7a",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "     Alter  Einkommen      Preis  Geschlecht  Zeit KundeNr\n",
+      "476     68    89437.0  114481.90         1.0  62.0   K0001\n",
+      "892     58    65271.0  106258.99         1.0  44.0   K0002\n",
+      "225     44    48195.0   85705.57         1.0  29.0   K0003\n",
+      "174     37    48957.0   76412.36         0.0  36.0   K0004\n",
+      "991     50    56621.0   92898.67         0.0  40.0   K0005\n",
+      "..     ...        ...        ...         ...   ...     ...\n",
+      "240     61    82624.0  134755.80         1.0  59.0   K1100\n",
+      "422     39    37905.0   61717.86         1.0  32.0   K1101\n",
+      "758     39    40159.0   67170.69         1.0  37.0   K1102\n",
+      "813     48    45545.0   75700.83         0.0  30.0   K1103\n",
+      "829     63    80414.0  101554.64         1.0  49.0   K1104\n",
+      "\n",
+      "[1104 rows x 6 columns]\n",
+      "     Alter     Einkommen  Geschlecht  Zeit KundeNr\n",
+      "454     42  57149.498007           0  35.0   K1105\n",
+      "812     34  43358.564350           1  33.0   K1106\n",
+      "229     33  45748.426936           1  55.0   K1107\n",
+      "400     57  58633.969764           1  32.0   K1108\n",
+      "744     43  53592.012684           0  31.0   K1109\n",
+      "..     ...           ...         ...   ...     ...\n",
+      "18      48  59967.313282           1  21.0   K1991\n",
+      "799     67  81521.761443           1  21.0   K1992\n",
+      "592     40  41616.572980           0  48.0   K1993\n",
+      "72      49  76602.788840           1  19.0   K1994\n",
+      "491     49  54754.525450           1  44.0   K1995\n",
+      "\n",
+      "[891 rows x 5 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(table_customer.sort_values('KundeNr'))\n",
+    "print(table_visitor.sort_values('KundeNr'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 227,
+   "id": "9f5be8cb-4019-4592-b2d5-218a6f8d0087",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "    KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit\n",
+      "476   K0001         1.0     68    89437.0  114481.90  62.0\n",
+      "892   K0002         1.0     58    65271.0  106258.99  44.0\n",
+      "225   K0003         1.0     44    48195.0   85705.57  29.0\n",
+      "174   K0004         0.0     37    48957.0   76412.36  36.0\n",
+      "991   K0005         0.0     50    56621.0   92898.67  40.0\n",
+      "..      ...         ...    ...        ...        ...   ...\n",
+      "240   K1100         1.0     61    82624.0  134755.80  59.0\n",
+      "422   K1101         1.0     39    37905.0   61717.86  32.0\n",
+      "758   K1102         1.0     39    40159.0   67170.69  37.0\n",
+      "813   K1103         0.0     48    45545.0   75700.83  30.0\n",
+      "829   K1104         1.0     63    80414.0  101554.64  49.0\n",
+      "\n",
+      "[1104 rows x 6 columns]\n",
+      "    KundeNr  Geschlecht  Alter     Einkommen  Zeit\n",
+      "454   K1105           0     42  57149.498007  35.0\n",
+      "812   K1106           1     34  43358.564350  33.0\n",
+      "229   K1107           1     33  45748.426936  55.0\n",
+      "400   K1108           1     57  58633.969764  32.0\n",
+      "744   K1109           0     43  53592.012684  31.0\n",
+      "..      ...         ...    ...           ...   ...\n",
+      "18    K1991           1     48  59967.313282  21.0\n",
+      "799   K1992           1     67  81521.761443  21.0\n",
+      "592   K1993           0     40  41616.572980  48.0\n",
+      "72    K1994           1     49  76602.788840  19.0\n",
+      "491   K1995           1     49  54754.525450  44.0\n",
+      "\n",
+      "[891 rows x 5 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "table_customer_resorted = table_customer[['KundeNr', 'Geschlecht', 'Alter', 'Einkommen', 'Preis', 'Zeit']]\n",
+    "table_customer_sort_by_KNr = table_customer_resorted.sort_values('KundeNr')\n",
+    "\n",
+    "table_visitor_resorted = table_visitor[['KundeNr', 'Geschlecht', 'Alter', 'Einkommen', 'Zeit']]\n",
+    "table_visitor_sort_by_KNr = table_visitor_resorted.sort_values('KundeNr')\n",
+    "\n",
+    "print(table_customer_sort_by_KNr)\n",
+    "print(table_visitor_sort_by_KNr)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 228,
+   "id": "12639d1d-d8f3-474e-98f4-5180332abd3c",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "outer join:\n",
+      "      KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit      Niederlassung\n",
+      "0      K0001         1.0   68.0    89437.0  114481.90  62.0            Sachsen\n",
+      "1      K0002         1.0   58.0    65271.0  106258.99  44.0                NRW\n",
+      "2      K0003         1.0   44.0    48195.0   85705.57  29.0             Hessen\n",
+      "3      K0004         0.0   37.0    48957.0   76412.36  36.0             Bayern\n",
+      "4      K0005         0.0   50.0    56621.0   92898.67  40.0             Bayern\n",
+      "...      ...         ...    ...        ...        ...   ...                ...\n",
+      "1000   K1001         0.0   55.0    66861.0   97465.12  54.0             Bayern\n",
+      "1001   K1002         0.0   41.0    38996.0   66237.40  28.0             Bayern\n",
+      "1002   K1003         1.0   55.0    60489.0  105741.80  47.0             Bayern\n",
+      "1003   K1004         1.0   42.0    41463.0   74976.67  43.0  Baden-Württemberg\n",
+      "1004   K1005         1.0   69.0    84021.0  133358.19  56.0  Baden-Württemberg\n",
+      "\n",
+      "[1005 rows x 7 columns]\n",
+      "outer Join:\n",
+      "     KundeNr  Geschlecht  Alter     Einkommen  Zeit          Niederlassung\n",
+      "0     K1105         0.0   42.0  57149.498007  35.0                 Hessen\n",
+      "1     K1106         1.0   34.0  43358.564350  33.0                 Berlin\n",
+      "2     K1107         1.0   33.0  45748.426936  55.0          Niedersachsen\n",
+      "3     K1108         1.0   57.0  58633.969764  32.0              Thüringen\n",
+      "4     K1109         0.0   43.0  53592.012684  31.0    Nordrhein-Westfalen\n",
+      "..      ...         ...    ...           ...   ...                    ...\n",
+      "886   K1991         1.0   48.0  59967.313282  21.0                 Hessen\n",
+      "887   K1992         1.0   67.0  81521.761443  21.0      Baden-Württemberg\n",
+      "888   K1993         0.0   40.0  41616.572980  48.0    Nordrhein-Westfalen\n",
+      "889   K1994         1.0   49.0  76602.788840  19.0                 Berlin\n",
+      "890   K1995         1.0   49.0  54754.525450  44.0  Berlin-Charlottenburg\n",
+      "\n",
+      "[891 rows x 6 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "customer_merge = pd.merge(table_customer_sort_by_KNr, table_geo, on = 'KundeNr', how = 'outer')\n",
+    "customer_geo = customer_merge.head(1005)\n",
+    "visitor_merge = pd.merge(table_visitor_sort_by_KNr, table_geo, on='KundeNr', how='outer')\n",
+    "visitor_geo = visitor_merge.head(891)\n",
+    "\n",
+    "print(\"outer join:\\n\", customer_geo)\n",
+    "print(\"outer Join:\\n\", visitor_geo)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "601b20bd-e0fc-48d5-b2b4-557add861e8a",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 229,
+   "id": "07c1e380-f742-41ed-8713-1157462b126b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Zeilen mit mindestens einem NaN-Wert:\n",
+      "    KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit  \\\n",
+      "23    K0024         NaN   41.0    46542.0   63477.00  40.0   \n",
+      "89    K0090         NaN   64.0    83452.0  133180.70  62.0   \n",
+      "165   K0166         NaN   53.0    49798.0   61329.51  39.0   \n",
+      "324   K0325         NaN   52.0    66602.0   98756.07  45.0   \n",
+      "789   K0790         NaN   67.0    91461.0  131748.07  66.0   \n",
+      "\n",
+      "           Niederlassung  \n",
+      "23     Baden-Württemberg  \n",
+      "89         Niedersachsen  \n",
+      "165  Nordrhein-Westfalen  \n",
+      "324               Bayern  \n",
+      "789               Berlin  \n",
+      "\n",
+      "Zeilen mit mindestens einem NaN-Wert:\n",
+      "Empty DataFrame\n",
+      "Columns: [KundeNr, Geschlecht, Alter, Einkommen, Zeit, Niederlassung]\n",
+      "Index: []\n"
+     ]
+    }
+   ],
+   "source": [
+    "customer_isna_rows = customer_geo[customer_geo.isna().any(axis = 1)]\n",
+    "print(\"Zeilen mit mindestens einem NaN-Wert:\")\n",
+    "print(customer_isna_rows)\n",
+    "\n",
+    "print(\n",
+    "    )\n",
+    "visitor_isna_rows = visitor_geo[visitor_geo.isna().any(axis = 1)]\n",
+    "print(\"Zeilen mit mindestens einem NaN-Wert:\")\n",
+    "print(visitor_isna_rows)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 230,
+   "id": "110cba52-8259-4fbc-9d30-04d424984d50",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Prozentualer Anteil von 1.0: 63.20%\n",
+      "Prozentualer Anteil von 0.0: 36.80%\n"
+     ]
+    }
+   ],
+   "source": [
+    "counts = customer_geo['Geschlecht'].value_counts(normalize=True)\n",
+    "percentage_1 = counts.get(1.0, 0)\n",
+    "percentage_0 = counts.get(0.0, 0)\n",
+    "\n",
+    "print(f\"Prozentualer Anteil von 1.0: {percentage_1:.2%}\")\n",
+    "print(f\"Prozentualer Anteil von 0.0: {percentage_0:.2%}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 231,
+   "id": "4ff1ee68-ef79-4bf2-bc94-f3940618fe97",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "     KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit      Niederlassung\n",
+      "0      K0001         1.0   68.0    89437.0  114481.90  62.0            Sachsen\n",
+      "1      K0002         1.0   58.0    65271.0  106258.99  44.0                NRW\n",
+      "2      K0003         1.0   44.0    48195.0   85705.57  29.0             Hessen\n",
+      "3      K0004         0.0   37.0    48957.0   76412.36  36.0             Bayern\n",
+      "4      K0005         0.0   50.0    56621.0   92898.67  40.0             Bayern\n",
+      "...      ...         ...    ...        ...        ...   ...                ...\n",
+      "1000   K1001         0.0   55.0    66861.0   97465.12  54.0             Bayern\n",
+      "1001   K1002         0.0   41.0    38996.0   66237.40  28.0             Bayern\n",
+      "1002   K1003         1.0   55.0    60489.0  105741.80  47.0             Bayern\n",
+      "1003   K1004         1.0   42.0    41463.0   74976.67  43.0  Baden-Württemberg\n",
+      "1004   K1005         1.0   69.0    84021.0  133358.19  56.0  Baden-Württemberg\n",
+      "\n",
+      "[1005 rows x 7 columns]\n",
+      "    KundeNr  Geschlecht  Alter     Einkommen  Zeit          Niederlassung\n",
+      "0     K1105         0.0   42.0  57149.498007  35.0                 Hessen\n",
+      "1     K1106         1.0   34.0  43358.564350  33.0                 Berlin\n",
+      "2     K1107         1.0   33.0  45748.426936  55.0          Niedersachsen\n",
+      "3     K1108         1.0   57.0  58633.969764  32.0              Thüringen\n",
+      "4     K1109         0.0   43.0  53592.012684  31.0    Nordrhein-Westfalen\n",
+      "..      ...         ...    ...           ...   ...                    ...\n",
+      "886   K1991         1.0   48.0  59967.313282  21.0                 Hessen\n",
+      "887   K1992         1.0   67.0  81521.761443  21.0      Baden-Württemberg\n",
+      "888   K1993         0.0   40.0  41616.572980  48.0    Nordrhein-Westfalen\n",
+      "889   K1994         1.0   49.0  76602.788840  19.0                 Berlin\n",
+      "890   K1995         1.0   49.0  54754.525450  44.0  Berlin-Charlottenburg\n",
+      "\n",
+      "[891 rows x 6 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "nan_indices = customer_geo[customer_geo['Geschlecht'].isnull()].index\n",
+    "replacement_values = np.random.choice([1.0, 0.0], size=len(nan_indices), p=[percentage_1, percentage_0])\n",
+    "customer_geo.loc[nan_indices, 'Geschlecht'] = replacement_values\n",
+    "customer_geo_noNaN = customer_geo.rename(columns={'Geschlecht': 'customer_geo_noNaN'})\n",
+    "\n",
+    "customer_geo_noNaN = customer_geo\n",
+    "visitor_geo_noNaN = visitor_geo\n",
+    "\n",
+    "print(customer_geo_noNaN)\n",
+    "print(visitor_geo_noNaN)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 232,
+   "id": "0309d14b-130d-4d2d-b0cf-2d30dac9364e",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Zeilen mit mindestens einem NaN-Wert:\n",
+      "Empty DataFrame\n",
+      "Columns: [KundeNr, Geschlecht, Alter, Einkommen, Preis, Zeit, Niederlassung]\n",
+      "Index: []\n"
+     ]
+    }
+   ],
+   "source": [
+    "customer_isna_rows = customer_geo[customer_geo.isna().any(axis = 1)]\n",
+    "print(\"Zeilen mit mindestens einem NaN-Wert:\")\n",
+    "print(customer_isna_rows)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 233,
+   "id": "b2365658-9b8f-4440-be10-66276804e6bb",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "KundeNr           object\n",
+      "Geschlecht       float64\n",
+      "Alter            float64\n",
+      "Einkommen        float64\n",
+      "Preis            float64\n",
+      "Zeit             float64\n",
+      "Niederlassung     object\n",
+      "dtype: object\n",
+      "\n",
+      "KundeNr           object\n",
+      "Geschlecht       float64\n",
+      "Alter            float64\n",
+      "Einkommen        float64\n",
+      "Zeit             float64\n",
+      "Niederlassung     object\n",
+      "dtype: object\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(customer_geo.dtypes)\n",
+    "\n",
+    "print(\n",
+    "    )\n",
+    "\n",
+    "print(visitor_geo.dtypes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 245,
+   "id": "47a63d82-5864-422e-9a78-cfc5e85f85d2",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Sind alle Werte für 'Geschlecht', 'Alter' und 'Zeit' in customer_geo ganzzahlig?\n",
+      "\n",
+      "Alle Werte in der Spalte 'Geschlecht' sind ganze Zahlen.\n",
+      "Alle Werte in der Spalte 'Alter' sind ganze Zahlen.\n",
+      "Alle Werte in der Spalte 'Zeit' sind ganze Zahlen.\n",
+      "\n",
+      "Sind alle Werte für 'Geschlecht', 'Alter' und 'Zeit' in visitor_geo ganzzahlig?\n",
+      "\n",
+      "Alle Werte in der Spalte 'Geschlecht' sind ganze Zahlen.\n",
+      "Alle Werte in der Spalte 'Alter' sind ganze Zahlen.\n",
+      "Alle Werte in der Spalte 'Zeit' sind ganze Zahlen.\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Sind alle Werte für 'Geschlecht', 'Alter' und 'Zeit' in customer_geo ganzzahlig?\")\n",
+    "print(\n",
+    "    )\n",
+    "columns_are_int_a = ['Geschlecht', 'Alter', 'Zeit']\n",
+    "\n",
+    "for col in columns_are_int_a:\n",
+    "    customer_geo_is_int = customer_geo_noNaN[col].apply(lambda x: np.equal(x, np.round(x))).all()\n",
+    "    \n",
+    "    if customer_geo_is_int:\n",
+    "        print(f\"Alle Werte in der Spalte '{col}' sind ganze Zahlen.\")\n",
+    "    else:\n",
+    "        print(f\"Nicht alle Werte in der Spalte '{col}' sind ganze Zahlen.\")\n",
+    "print(\n",
+    "    )\n",
+    "print(\"Sind alle Werte für 'Geschlecht', 'Alter' und 'Zeit' in visitor_geo ganzzahlig?\")\n",
+    "print(\n",
+    "    )\n",
+    "columns_are_int_b = ['Geschlecht', 'Alter', 'Zeit']\n",
+    "\n",
+    "for col in columns_are_int_b:\n",
+    "    visitor_geo_is_int = visitor_geo_noNaN[col].apply(lambda x: np.equal(x, np.round(x))).all()\n",
+    "    \n",
+    "    if visitor_geo_is_int:\n",
+    "        print(f\"Alle Werte in der Spalte '{col}' sind ganze Zahlen.\")\n",
+    "    else:\n",
+    "        print(f\"Nicht alle Werte in der Spalte '{col}' sind ganze Zahlen.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 258,
+   "id": "80f0e240-ff73-45bd-aa3a-c98756fb9b5e",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Also convertieren wir diese Spalten in integer\n",
+      "\n",
+      "     KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit      Niederlassung\n",
+      "0      K0001           1     68    89437.0  114481.90    62            Sachsen\n",
+      "1      K0002           1     58    65271.0  106258.99    44                NRW\n",
+      "2      K0003           1     44    48195.0   85705.57    29             Hessen\n",
+      "3      K0004           0     37    48957.0   76412.36    36             Bayern\n",
+      "4      K0005           0     50    56621.0   92898.67    40             Bayern\n",
+      "...      ...         ...    ...        ...        ...   ...                ...\n",
+      "1000   K1001           0     55    66861.0   97465.12    54             Bayern\n",
+      "1001   K1002           0     41    38996.0   66237.40    28             Bayern\n",
+      "1002   K1003           1     55    60489.0  105741.80    47             Bayern\n",
+      "1003   K1004           1     42    41463.0   74976.67    43  Baden-Württemberg\n",
+      "1004   K1005           1     69    84021.0  133358.19    56  Baden-Württemberg\n",
+      "\n",
+      "[1005 rows x 7 columns]\n",
+      "\n",
+      "KundeNr           object\n",
+      "Geschlecht         int32\n",
+      "Alter              int32\n",
+      "Einkommen        float64\n",
+      "Preis            float64\n",
+      "Zeit               int32\n",
+      "Niederlassung     object\n",
+      "dtype: object\n",
+      "\n",
+      "    KundeNr  Geschlecht  Alter     Einkommen  Zeit          Niederlassung\n",
+      "0     K1105           0     42  57149.498007    35                 Hessen\n",
+      "1     K1106           1     34  43358.564350    33                 Berlin\n",
+      "2     K1107           1     33  45748.426936    55          Niedersachsen\n",
+      "3     K1108           1     57  58633.969764    32              Thüringen\n",
+      "4     K1109           0     43  53592.012684    31    Nordrhein-Westfalen\n",
+      "..      ...         ...    ...           ...   ...                    ...\n",
+      "886   K1991           1     48  59967.313282    21                 Hessen\n",
+      "887   K1992           1     67  81521.761443    21      Baden-Württemberg\n",
+      "888   K1993           0     40  41616.572980    48    Nordrhein-Westfalen\n",
+      "889   K1994           1     49  76602.788840    19                 Berlin\n",
+      "890   K1995           1     49  54754.525450    44  Berlin-Charlottenburg\n",
+      "\n",
+      "[891 rows x 6 columns]\n",
+      "\n",
+      "KundeNr           object\n",
+      "Geschlecht         int32\n",
+      "Alter              int32\n",
+      "Einkommen        float64\n",
+      "Zeit               int32\n",
+      "Niederlassung     object\n",
+      "dtype: object\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Also convertieren wir diese Spalten in integer\")\n",
+    "print(\n",
+    "    )\n",
+    "customer_geo_retype = customer_geo.astype({'Geschlecht': int, 'Alter': int, 'Zeit': int})\n",
+    "print(customer_geo_retype)\n",
+    "print(\n",
+    "    )\n",
+    "print(customer_geo_retype.dtypes)\n",
+    "print(\n",
+    "    )\n",
+    "visitor_geo_retype = visitor_geo.astype({'Geschlecht': int, 'Alter': int, 'Zeit': int})\n",
+    "print(visitor_geo_retype)\n",
+    "print(\n",
+    "    )\n",
+    "print(visitor_geo_retype.dtypes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 257,
+   "id": "6a4af9ef-7210-46f4-b62d-c1fb047a04dc",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Sind alle Werte für 'Einkommen' und 'Preis' in customer_geo ganzzahlig?\n",
+      "\n",
+      "Alle Werte in der Spalte 'Einkommen' sind ganze Zahlen.\n",
+      "Nicht alle Werte in der Spalte 'Preis' sind ganze Zahlen.\n",
+      "\n",
+      "Sind alle Werte für 'Einkommen' in visitor_geo ganzzahlig?\n",
+      "\n",
+      "Nicht alle Werte in der Spalte 'Einkommen' sind ganze Zahlen.\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Sind alle Werte für 'Einkommen' und 'Preis' in customer_geo ganzzahlig?\")\n",
+    "print(\n",
+    "    )\n",
+    "columns_are_int_c = ['Einkommen', 'Preis']\n",
+    "\n",
+    "for col in columns_are_int_c:\n",
+    "    customer_geo_is_int_c = customer_geo[col].apply(lambda x: np.equal(x, np.round(x))).all()\n",
+    "    \n",
+    "    if customer_geo_is_int_c:\n",
+    "        print(f\"Alle Werte in der Spalte '{col}' sind ganze Zahlen.\")\n",
+    "    else:\n",
+    "        print(f\"Nicht alle Werte in der Spalte '{col}' sind ganze Zahlen.\")\n",
+    "print(\n",
+    "    )\n",
+    "\n",
+    "print(\"Sind alle Werte für 'Einkommen' in visitor_geo ganzzahlig?\")\n",
+    "print(\n",
+    "    )\n",
+    "columns_are_int_d = ['Einkommen']\n",
+    "\n",
+    "for col in columns_are_int_d:\n",
+    "    visitor_geo_is_int_d = visitor_geo[col].apply(lambda x: np.equal(x, np.round(x))).all()\n",
+    "    \n",
+    "    if visitor_geo_is_int_d:\n",
+    "        print(f\"Alle Werte in der Spalte '{col}' sind ganze Zahlen.\")\n",
+    "    else:\n",
+    "        print(f\"Nicht alle Werte in der Spalte '{col}' sind ganze Zahlen.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 255,
+   "id": "364cd596-ea66-41d7-958b-cb0d173398d7",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Welchen Datentyp haben 'Einkommen' und 'Preis'?\n",
+      "\n",
+      "KundeNr           object\n",
+      "Geschlecht         int32\n",
+      "Alter              int32\n",
+      "Einkommen        float64\n",
+      "Preis            float64\n",
+      "Zeit               int32\n",
+      "Niederlassung     object\n",
+      "dtype: object\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Welchen Datentyp haben 'Einkommen' und 'Preis'?\")\n",
+    "print(\n",
+    "    )\n",
+    "print(customer_geo_retype.dtypes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 260,
+   "id": "33a9d26b-9faa-4275-8519-73db0a7873ee",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Da Einkommen und Preis Geldwerte sind convertieren wir diese als float mit zwei Decimalstellen.\n",
+      "\n",
+      "Customer\n",
+      "     KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit      Niederlassung\n",
+      "0      K0001           1     68    89437.0  114481.90    62            Sachsen\n",
+      "1      K0002           1     58    65271.0  106258.99    44                NRW\n",
+      "2      K0003           1     44    48195.0   85705.57    29             Hessen\n",
+      "3      K0004           0     37    48957.0   76412.36    36             Bayern\n",
+      "4      K0005           0     50    56621.0   92898.67    40             Bayern\n",
+      "...      ...         ...    ...        ...        ...   ...                ...\n",
+      "1000   K1001           0     55    66861.0   97465.12    54             Bayern\n",
+      "1001   K1002           0     41    38996.0   66237.40    28             Bayern\n",
+      "1002   K1003           1     55    60489.0  105741.80    47             Bayern\n",
+      "1003   K1004           1     42    41463.0   74976.67    43  Baden-Württemberg\n",
+      "1004   K1005           1     69    84021.0  133358.19    56  Baden-Württemberg\n",
+      "\n",
+      "[1005 rows x 7 columns]\n",
+      "\n",
+      "KundeNr           object\n",
+      "Geschlecht         int32\n",
+      "Alter              int32\n",
+      "Einkommen        float64\n",
+      "Preis            float64\n",
+      "Zeit               int32\n",
+      "Niederlassung     object\n",
+      "dtype: object\n",
+      "\n",
+      "Visitor\n",
+      "    KundeNr  Geschlecht  Alter  Einkommen  Zeit          Niederlassung\n",
+      "0     K1105           0     42   57149.50    35                 Hessen\n",
+      "1     K1106           1     34   43358.56    33                 Berlin\n",
+      "2     K1107           1     33   45748.43    55          Niedersachsen\n",
+      "3     K1108           1     57   58633.97    32              Thüringen\n",
+      "4     K1109           0     43   53592.01    31    Nordrhein-Westfalen\n",
+      "..      ...         ...    ...        ...   ...                    ...\n",
+      "886   K1991           1     48   59967.31    21                 Hessen\n",
+      "887   K1992           1     67   81521.76    21      Baden-Württemberg\n",
+      "888   K1993           0     40   41616.57    48    Nordrhein-Westfalen\n",
+      "889   K1994           1     49   76602.79    19                 Berlin\n",
+      "890   K1995           1     49   54754.53    44  Berlin-Charlottenburg\n",
+      "\n",
+      "[891 rows x 6 columns]\n",
+      "\n",
+      "KundeNr           object\n",
+      "Geschlecht         int32\n",
+      "Alter              int32\n",
+      "Einkommen        float64\n",
+      "Zeit               int32\n",
+      "Niederlassung     object\n",
+      "dtype: object\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Da Einkommen und Preis Geldwerte sind convertieren wir diese als float mit zwei Decimalstellen.\")\n",
+    "print(\n",
+    "    )\n",
+    "customer_geo_retype['Einkommen'] = pd.to_numeric(customer_geo_retype['Einkommen'], errors='coerce')\n",
+    "customer_geo_retype['Preis'] = pd.to_numeric(customer_geo_retype['Preis'], errors='coerce')\n",
+    "\n",
+    "customer_geo_retype['Einkommen'] = customer_geo_retype['Einkommen'].astype(float)\n",
+    "customer_geo_retype['Preis'] = customer_geo_retype['Preis'].astype(float)\n",
+    "\n",
+    "customer_geo_retype['Einkommen'] = customer_geo_retype['Einkommen'].round(2)\n",
+    "customer_geo_retype['Preis'] = customer_geo_retype['Preis'].round(2)\n",
+    "\n",
+    "print(\"Customer\")\n",
+    "print(customer_geo_retype)\n",
+    "print(\n",
+    "    )\n",
+    "print(customer_geo_retype.dtypes)\n",
+    "print(\n",
+    "    )\n",
+    "visitor_geo_retype['Einkommen'] = pd.to_numeric(visitor_geo_retype['Einkommen'], errors='coerce')\n",
+    "\n",
+    "visitor_geo_retype['Einkommen'] = visitor_geo_retype['Einkommen'].astype(float)\n",
+    "\n",
+    "visitor_geo_retype['Einkommen'] = visitor_geo_retype['Einkommen'].round(2)\n",
+    "\n",
+    "print(\"Visitor\")\n",
+    "print(visitor_geo_retype)\n",
+    "print(\n",
+    "    )\n",
+    "print(visitor_geo_retype.dtypes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 265,
+   "id": "ff338c13-edb7-4b0a-b9cd-ba9600fd5a20",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Treten unter den Values für 'Niederlassung Doppelungen auf?\n",
+      "\n",
+      "['Sachsen' 'NRW' 'Hessen' 'Bayern' 'Baden-Württemberg'\n",
+      " 'Nordrhein-Westfalen' 'Berlin' 'Niedersachsen' 'Brandenburg' 'Thüringen'\n",
+      " 'Hamburg' 'Düsseldorf' 'Berlin-Charlottenburg' 'Berlin-Mitte' 'BERLIN']\n",
+      "\n",
+      "['Hessen' 'Berlin' 'Niedersachsen' 'Thüringen' 'Nordrhein-Westfalen'\n",
+      " 'Baden-Württemberg' 'Bayern' 'Hamburg' 'Sachsen' 'Brandenburg' 'BERLIN'\n",
+      " 'Düsseldorf' 'NRW' 'Berlin-Charlottenburg']\n",
+      "\n",
+      "Ja. Wir fassen NRW; Nordrhein-westfalen unter Nordrhein-westfalen und BERLIN; Berlin-Charlottenburg; Berlin-Mitte; Berlin unter Berlin zusammen.\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Treten unter den Values für 'Niederlassung Doppelungen auf?\")\n",
+    "print(\n",
+    "    )\n",
+    "Niederlassung_unique_values_customer = customer_geo_retype['Niederlassung'].unique()\n",
+    "print(Niederlassung_unique_values_customer)\n",
+    "print(\n",
+    "    )\n",
+    "Niederlassung_unique_values_visitor = visitor_geo_retype['Niederlassung'].unique()\n",
+    "print(Niederlassung_unique_values_visitor)\n",
+    "print(\n",
+    "    )\n",
+    "print(\"Ja.\"\" Wir fassen NRW; Nordrhein-westfalen unter Nordrhein-westfalen und BERLIN; Berlin-Charlottenburg; Berlin-Mitte; Berlin unter Berlin zusammen.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 267,
+   "id": "84ab3b23-d5d9-45ef-a805-df42783aa3e9",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Customer\n",
+      "     KundeNr  Geschlecht  Alter  Einkommen      Preis  Zeit  \\\n",
+      "0      K0001           1     68    89437.0  114481.90    62   \n",
+      "1      K0002           1     58    65271.0  106258.99    44   \n",
+      "2      K0003           1     44    48195.0   85705.57    29   \n",
+      "3      K0004           0     37    48957.0   76412.36    36   \n",
+      "4      K0005           0     50    56621.0   92898.67    40   \n",
+      "...      ...         ...    ...        ...        ...   ...   \n",
+      "1000   K1001           0     55    66861.0   97465.12    54   \n",
+      "1001   K1002           0     41    38996.0   66237.40    28   \n",
+      "1002   K1003           1     55    60489.0  105741.80    47   \n",
+      "1003   K1004           1     42    41463.0   74976.67    43   \n",
+      "1004   K1005           1     69    84021.0  133358.19    56   \n",
+      "\n",
+      "            Niederlassung  \n",
+      "0                 Sachsen  \n",
+      "1     Nordrhein-Westfalen  \n",
+      "2                  Hessen  \n",
+      "3                  Bayern  \n",
+      "4                  Bayern  \n",
+      "...                   ...  \n",
+      "1000               Bayern  \n",
+      "1001               Bayern  \n",
+      "1002               Bayern  \n",
+      "1003    Baden-Württemberg  \n",
+      "1004    Baden-Württemberg  \n",
+      "\n",
+      "[1005 rows x 7 columns]\n",
+      "\n",
+      "Visitor\n",
+      "    KundeNr  Geschlecht  Alter  Einkommen  Zeit        Niederlassung\n",
+      "0     K1105           0     42   57149.50    35               Hessen\n",
+      "1     K1106           1     34   43358.56    33               Berlin\n",
+      "2     K1107           1     33   45748.43    55        Niedersachsen\n",
+      "3     K1108           1     57   58633.97    32            Thüringen\n",
+      "4     K1109           0     43   53592.01    31  Nordrhein-Westfalen\n",
+      "..      ...         ...    ...        ...   ...                  ...\n",
+      "886   K1991           1     48   59967.31    21               Hessen\n",
+      "887   K1992           1     67   81521.76    21    Baden-Württemberg\n",
+      "888   K1993           0     40   41616.57    48  Nordrhein-Westfalen\n",
+      "889   K1994           1     49   76602.79    19               Berlin\n",
+      "890   K1995           1     49   54754.53    44               Berlin\n",
+      "\n",
+      "[891 rows x 6 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "customer_geo_retype['Niederlassung'] = customer_geo_retype['Niederlassung'].replace({\n",
+    "    'NRW': 'Nordrhein-Westfalen',\n",
+    "    'BERLIN': 'Berlin',\n",
+    "    'Berlin-Charlottenburg': 'Berlin',\n",
+    "    'Berlin-Mitte': 'Berlin'\n",
+    "})\n",
+    "\n",
+    "visitor_geo_retype['Niederlassung'] = visitor_geo_retype['Niederlassung'].replace({\n",
+    "    'NRW': 'Nordrhein-Westfalen',\n",
+    "    'BERLIN': 'Berlin',\n",
+    "    'Berlin-Charlottenburg': 'Berlin',\n",
+    "    'Berlin-Mitte': 'Berlin'\n",
+    "})\n",
+    "print(\"Customer\")\n",
+    "print(customer_geo_retype)\n",
+    "print(\n",
+    "    )\n",
+    "print(\"Visitor\")\n",
+    "print(visitor_geo_retype)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 274,
+   "id": "25440b0b-763d-41ad-a071-8155f2471731",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Sind nun noch Doppelungen vorhanden?\n",
+      "\n",
+      "In Customer sind keine ungewollten Werte mehr vorhanden.\n",
+      "\n",
+      "In Visitor sind keine ungewollten Werte mehr vorhanden.\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Sind nun noch Doppelungen vorhanden?\")\n",
+    "  \n",
+    "filtered_df_customer = customer_geo_retype[customer_geo_retype['Niederlassung'].isin(['Nordrhein-Westfalen', 'Berlin'])]\n",
+    "remaining_unwanted_values_customer = customer_geo_retype[customer_geo_retype['Niederlassung'].isin(['NRW', 'BERLIN', 'Berlin-Charlottenburg', 'Berlin-Mitte'])]\n",
+    "if not remaining_unwanted_values.empty:\n",
+    "    print(\"\\nUngewollte Werte gefunden:\")\n",
+    "    print(remaining_unwanted_values)\n",
+    "else:\n",
+    "    print(\"\\nIn Customer sind keine ungewollten Werte mehr vorhanden.\")\n",
+    "\n",
+    "filtered_df_visitor = visitor_geo_retype[visitor_geo_retype['Niederlassung'].isin(['Nordrhein-Westfalen', 'Berlin'])]\n",
+    "remaining_unwanted_values_visitor = visitor_geo_retype[visitor_geo_retype['Niederlassung'].isin(['NRW', 'BERLIN', 'Berlin-Charlottenburg', 'Berlin-Mitte'])]\n",
+    "if not remaining_unwanted_values.empty:\n",
+    "    print(\"\\nUngewollte Werte gefunden:\")\n",
+    "    print(remaining_unwanted_values)\n",
+    "else:\n",
+    "    print(\"\\nIn Visitor sind keine ungewollten Werte mehr vorhanden.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 243,
+   "id": "7b03ae42-ca63-4683-a9df-1c2c0fe4f535",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "KundeNr           object\n",
+      "Geschlecht       float64\n",
+      "Alter            float64\n",
+      "Einkommen        float64\n",
+      "Zeit             float64\n",
+      "Niederlassung     object\n",
+      "dtype: object\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(visitor_geo.dtypes)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
